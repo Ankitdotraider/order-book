@@ -2,6 +2,9 @@
 #include<map>
 #include<string>
 #include<algorithm>
+#include<chrono>
+#include<fstream>
+#include<sstream>
 using namespace std;
 using namespace std;
 
@@ -84,16 +87,27 @@ void orderbook::cancelorder(int price, int quantity, string type){
         if(asks[price] <= 0) asks.erase(price);
     }
 }
-
+void loadorders(orderbook& ob, string filename){
+    ifstream file(filename);
+    string line;
+    while(getline(file, line)){
+        stringstream ss(line);
+        string id, type, price, quantity;
+        getline(ss, id, ',');
+        getline(ss, type, ',');
+        getline(ss, price, ',');
+        getline(ss, quantity, ',');
+        order o = {stoi(id), type, stoi(price), stoi(quantity)};
+        ob.addorder(o);
+    }
+}
 int main(){
     orderbook ob;
-    ob.addorder({1, "buy", 100, 50});
-    ob.addorder({2, "buy", 99, 20});
-    ob.addorder({3, "sell", 101, 30});
-    ob.addorder({4, "sell", 100, 10});
-    ob.addorder({5, "market_buy", 0, 35});
-    ob.printbook();
-    ob.cancelorder(99, 20, "buy");
+    auto start = chrono::high_resolution_clock::now();
+    loadorders(ob, "orders.csv");
+    auto end = chrono::high_resolution_clock::now();
+    auto duration = chrono::duration_cast<chrono::nanoseconds>(end - start);
+    cout << "\nProcessed in: " << duration.count() << " nanoseconds\n";
     cout << "\nAfter cancel:\n";
     ob.printbook();
 }
